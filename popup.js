@@ -1,38 +1,71 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('srtFile');
+    // Get all input elements
+    const primarySrtFile = document.getElementById('primarySrtFile');
+    const secondarySrtFile = document.getElementById('secondarySrtFile');
     const loadButton = document.getElementById('loadButton');
     const status = document.getElementById('status');
-    const textColor = document.getElementById('textColor');
-    const fontSize = document.getElementById('fontSize');
+
+    // Primary subtitle settings
+    const primaryTextColor = document.getElementById('primaryTextColor');
+    const primaryFontSize = document.getElementById('primaryFontSize');
+    const primaryFontSizeValue = document.getElementById('primaryFontSizeValue');
+    const primaryPreviewText = document.getElementById('primaryPreviewText');
+
+    // Secondary subtitle settings
+    const secondaryTextColor = document.getElementById('secondaryTextColor');
+    const secondaryFontSize = document.getElementById('secondaryFontSize');
+    const secondaryFontSizeValue = document.getElementById('secondaryFontSizeValue');
+    const secondaryPreviewText = document.getElementById('secondaryPreviewText');
+
+    // Common settings
     const bgOpacity = document.getElementById('bgOpacity');
     const lineSpacing = document.getElementById('lineSpacing');
-    const fontSizeValue = document.getElementById('fontSizeValue');
     const bgOpacityValue = document.getElementById('bgOpacityValue');
     const lineSpacingValue = document.getElementById('lineSpacingValue');
-    const previewText = document.getElementById('previewText');
+
+    // Display mode
+    const displayMode = document.getElementById('displayMode');
 
     // Load saved settings
     chrome.storage.sync.get({
-        textColor: '#ffffff',
-        fontSize: '20',
+        primaryTextColor: '#ffffff',
+        primaryFontSize: '20',
+        secondaryTextColor: '#ffff00',
+        secondaryFontSize: '20',
         bgOpacity: '80',
-        lineSpacing: '1.6'
+        lineSpacing: '1.6',
+        displayMode: 'both'
     }, function(items) {
-        textColor.value = items.textColor;
-        fontSize.value = items.fontSize;
+        primaryTextColor.value = items.primaryTextColor;
+        primaryFontSize.value = items.primaryFontSize;
+        secondaryTextColor.value = items.secondaryTextColor;
+        secondaryFontSize.value = items.secondaryFontSize;
         bgOpacity.value = items.bgOpacity;
         lineSpacing.value = items.lineSpacing;
-        updatePreview();
+        displayMode.value = items.displayMode;
+        updatePreviews();
     });
 
     // Update preview text when settings change
-    function updatePreview() {
+    function updatePreviews() {
         const opacity = bgOpacity.value / 100;
-        previewText.style.color = textColor.value;
-        previewText.style.fontSize = fontSize.value + 'px';
-        previewText.style.backgroundColor = `rgba(0, 0, 0, ${opacity})`;
-        previewText.style.lineHeight = lineSpacing.value;
-        fontSizeValue.textContent = fontSize.value;
+        const bgColor = `rgba(0, 0, 0, ${opacity})`;
+
+        // Update primary preview
+        primaryPreviewText.style.color = primaryTextColor.value;
+        primaryPreviewText.style.fontSize = primaryFontSize.value + 'px';
+        primaryPreviewText.style.backgroundColor = bgColor;
+        primaryPreviewText.style.lineHeight = lineSpacing.value;
+        primaryFontSizeValue.textContent = primaryFontSize.value;
+
+        // Update secondary preview
+        secondaryPreviewText.style.color = secondaryTextColor.value;
+        secondaryPreviewText.style.fontSize = secondaryFontSize.value + 'px';
+        secondaryPreviewText.style.backgroundColor = bgColor;
+        secondaryPreviewText.style.lineHeight = lineSpacing.value;
+        secondaryFontSizeValue.textContent = secondaryFontSize.value;
+
+        // Update common values
         bgOpacityValue.textContent = bgOpacity.value;
         lineSpacingValue.textContent = lineSpacing.value;
     }
@@ -40,14 +73,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Save settings and update preview
     function saveSettings() {
         const settings = {
-            textColor: textColor.value,
-            fontSize: fontSize.value,
+            primaryTextColor: primaryTextColor.value,
+            primaryFontSize: primaryFontSize.value,
+            secondaryTextColor: secondaryTextColor.value,
+            secondaryFontSize: secondaryFontSize.value,
             bgOpacity: bgOpacity.value,
-            lineSpacing: lineSpacing.value
+            lineSpacing: lineSpacing.value,
+            displayMode: displayMode.value
         };
 
         chrome.storage.sync.set(settings, function() {
-            updatePreview();
+            updatePreviews();
             // Send settings to content script
             chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                 chrome.tabs.sendMessage(tabs[0].id, {
@@ -59,53 +95,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Add event listeners for settings changes
-    textColor.addEventListener('change', saveSettings);
-    fontSize.addEventListener('input', saveSettings);
+    primaryTextColor.addEventListener('change', saveSettings);
+    primaryFontSize.addEventListener('input', saveSettings);
+    secondaryTextColor.addEventListener('change', saveSettings);
+    secondaryFontSize.addEventListener('input', saveSettings);
     bgOpacity.addEventListener('input', saveSettings);
     lineSpacing.addEventListener('input', saveSettings);
+    displayMode.addEventListener('change', saveSettings);
 
     loadButton.addEventListener('click', async function() {
-        const file = fileInput.files[0];
-        if (!file) {
-            status.textContent = 'Please select an SRT file first';
+        const primaryFile = primarySrtFile.files[0];
+        const secondaryFile = secondarySrtFile.files[0];
+
+        if (!primaryFile && !secondaryFile) {
+            status.textContent = 'Please select at least one SRT file';
             return;
         }
 
         try {
-            const content = await readFile(file);
-            const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
-            
-            // Inject content script if not already injected
-            try {
-                await chrome.tabs.sendMessage(tab.id, {type: 'CHECK_LOADED'});
-            } catch (e) {
-                // If content script is not loaded, reload the page
-                await chrome.tabs.reload(tab.id);
-                // Wait for page to load
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
+            const subtitles = {
+                primary: primaryFile ? await readFile(primaryFile) : null,
+                secondary: secondaryFile ? await readFile(secondaryFile) : null
+            };
 
             // Send the SRT content and current settings to the content script
-            await chrome.tabs.sendMessage(tab.id, {
-                action: 'loadSubtitles',
-                content: content,
-                settings: {
-                    textColor: textColor.value,
-                    fontSize: fontSize.value,
-                    bgOpacity: bgOpacity.value,
-                    lineSpacing: lineSpacing.value
-                }
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                chrome.tabs.sendMessage(tabs[0].id, {
+                    action: 'loadSubtitles',
+                    subtitles: subtitles,
+                    settings: {
+                        primaryTextColor: primaryTextColor.value,
+                        primaryFontSize: primaryFontSize.value,
+                        secondaryTextColor: secondaryTextColor.value,
+                        secondaryFontSize: secondaryFontSize.value,
+                        bgOpacity: bgOpacity.value,
+                        lineSpacing: lineSpacing.value,
+                        displayMode: displayMode.value
+                    }
+                });
+                status.textContent = 'Subtitles loaded successfully!';
             });
-            
-            status.textContent = 'Subtitles loaded successfully!';
         } catch (error) {
-            status.textContent = 'Error: ' + error.message;
-            console.error('Error:', error);
+            status.textContent = 'Error loading subtitles: ' + error.message;
         }
     });
 
     // Initialize preview
-    updatePreview();
+    updatePreviews();
 });
 
 function readFile(file) {
