@@ -10,3 +10,4 @@
 
 **Test on a Video:** Go to a website with a video (e.g., YouTube), click the extension icon, select an SRT file, and play the video.
 
+![Example image](img_example.png)
