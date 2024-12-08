@@ -214,10 +214,59 @@ function initializeSubtitles() {
 
 // Find the main video element
 function findVideoElement() {
+    // Try regular DOM first
     const videos = document.getElementsByTagName('video');
+    console.log('Found videos in regular DOM:', videos.length);
+    
     if (videos.length > 0) {
         return videos[0];
     }
+
+    // Try querySelector for broader search
+    const videoQuery = document.querySelector('video');
+    if (videoQuery) {
+        console.log('Found video with querySelector');
+        return videoQuery;
+    }
+
+    // Try searching in Shadow DOM
+    const getAllShadowRoots = (root) => {
+        const elements = root.querySelectorAll('*');
+        const shadowRoots = [...elements]
+            .map(el => el.shadowRoot)
+            .filter(Boolean);
+        return shadowRoots;
+    };
+
+    const shadowRoots = getAllShadowRoots(document);
+    console.log('Found shadow roots:', shadowRoots.length);
+    
+    for (const shadowRoot of shadowRoots) {
+        const shadowVideos = shadowRoot.querySelectorAll('video');
+        if (shadowVideos.length > 0) {
+            console.log('Found video in shadow DOM');
+            return shadowVideos[0];
+        }
+    }
+
+    // If still not found, try with iframe content
+    const iframes = document.getElementsByTagName('iframe');
+    console.log('Found iframes:', iframes.length);
+    
+    for (const iframe of iframes) {
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const iframeVideos = iframeDoc.getElementsByTagName('video');
+            if (iframeVideos.length > 0) {
+                console.log('Found video in iframe');
+                return iframeVideos[0];
+            }
+        } catch (e) {
+            console.log('Could not access iframe content:', e);
+        }
+    }
+
+    console.log('No video element found in any context');
     return null;
 }
 
