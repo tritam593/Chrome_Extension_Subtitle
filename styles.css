@@ -1,0 +1,65 @@
+.srt-subtitle-wrapper {
+    position: absolute;
+    z-index: 9998;
+    pointer-events: none;
+}
+
+.srt-subtitle-container {
+    position: absolute;
+    z-index: 9999;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 20px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    display: none;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    max-width: 80%;
+    white-space: pre-line;
+    transform: translate(-50%, -50%);
+    cursor: move;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background-color 0.3s, color 0.3s, font-size 0.3s;
+    /* Add line height for better spacing between lines */
+    line-height: 1.6;
+    /* Add additional spacing between paragraphs if needed */
+    & p {
+        margin: 0.5em 0;
+    }
+}
+
+.subtitle-line {
+    display: block;
+    margin: 0.3em 0;
+    line-height: 1.4;
+}
+
+/* Add extra spacing between groups of lines */
+.subtitle-line + .subtitle-line {
+    margin-top: 0.2em;
+}
+
+/* Fullscreen styles */
+*:fullscreen .srt-subtitle-wrapper,
+*:-webkit-full-screen .srt-subtitle-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Preview styles in popup */
+.preview-text {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 4px;
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+    /* Match the line height with subtitle container */
+    line-height: 1.6;
+}

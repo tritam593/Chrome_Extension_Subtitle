@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SRT Subtitle Loader</title>
+    <style>
+        body {
+            width: 300px;
+            padding: 15px;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .settings-group {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .settings-group h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #333;
+        }
+        .setting-item {
+            margin-bottom: 8px;
+        }
+        .setting-item label {
+            display: block;
+            margin-bottom: 4px;
+            color: #666;
+        }
+        button {
+            padding: 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input[type="color"] {
+            width: 50px;
+            height: 25px;
+            padding: 0;
+            border: none;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        #status {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .preview-text {
+            padding: 5px;
+            margin-top: 10px;
+            text-align: center;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>SRT Subtitle Loader</h2>
+        
+        <div class="settings-group">
+            <h3>Load Subtitle File</h3>
+            <input type="file" id="srtFile" accept=".srt">
+            <button id="loadButton">Load Subtitles</button>
+        </div>
+
+        <div class="settings-group">
+            <h3>Subtitle Settings</h3>
+            
+            <div class="setting-item">
+                <label for="textColor">Text Color:</label>
+                <input type="color" id="textColor" value="#ffffff">
+            </div>
+
+            <div class="setting-item">
+                <label for="fontSize">Font Size: <span id="fontSizeValue">20</span>px</label>
+                <input type="range" id="fontSize" min="12" max="40" value="20">
+            </div>
+
+            <div class="setting-item">
+                <label for="bgOpacity">Background Opacity: <span id="bgOpacityValue">80</span>%</label>
+                <input type="range" id="bgOpacity" min="0" max="100" value="80">
+            </div>
+
+            <div class="setting-item">
+                <label for="lineSpacing">Line Spacing:</label>
+                <input type="range" id="lineSpacing" min="0" max="3" step="0.1" value="1.6">
+                <span id="lineSpacingValue">1.6</span>
+            </div>
+
+            <div class="preview-text" id="previewText">Preview Text</div>
+        </div>
+
+        <div id="status"></div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
